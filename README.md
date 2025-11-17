@@ -10,8 +10,6 @@
 
 1. Contact the administrator of the Axon Evidence Account to create an API Token.
 2. From the admin account navigate to the "Admin" tab![rtaImage](https://github.com/user-attachments/assets/050ba165-7483-4b27-89d3-734abe623d13)
-
-
 3. Then select "API Settings" under "Security Settings"![image](https://github.com/user-attachments/assets/f83d665c-aea6-4077-8b2d-ea04105644f7)
 4. Click "Create Client" & fill in a name - IE "COTAK"
 5. For API permissions select the following:
