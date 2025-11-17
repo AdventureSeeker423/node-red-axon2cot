@@ -11,7 +11,7 @@
 1. Contact the administrator of the Axon Evidence Account to create an API Token.
 2. From the admin account navigate to the "Admin" tab![rtaImage](https://github.com/user-attachments/assets/050ba165-7483-4b27-89d3-734abe623d13)
 3. Then select "API Settings" under "Security Settings"![image](https://github.com/user-attachments/assets/f83d665c-aea6-4077-8b2d-ea04105644f7)
-4. Click "Create Client" & fill in a name - IE "COTAK"
+4. Click "Create Client" & fill in a name - IE "TAK Server"
 5. For API permissions select the following:
     - `Device: state.any.read Allowed`![rtaImage](https://github.com/user-attachments/assets/b3869554-9461-49b5-a5c7-a1915f799aeb)
 
@@ -25,6 +25,6 @@
 - Secret
 - Partner ID
 - Client ID
-- Agency Domain (IE <your-agency>.evidence.com)![rtaImage](https://github.com/user-attachments/assets/10316d45-6ec8-484d-8444-6d028bb1f9e9)
+- Agency Domain (<your-agency>.evidence.com)![rtaImage](https://github.com/user-attachments/assets/10316d45-6ec8-484d-8444-6d028bb1f9e9)
 
 ## Deployment
