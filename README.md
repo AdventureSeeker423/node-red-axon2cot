@@ -4,6 +4,8 @@
 
 <p align='center'>Pulls both Axon Body and Axon Fleet details and Locations.</p>
 
+<p align='center'>Portions of this code are derived from https://github.com/dfpc-coe/etl-axon. Licensed under the MIT License.</p>
+
 ## Pre-Requisites / Setup
 
 1. Contact the administrator of the Axon Evidence Account to create an API Token.
