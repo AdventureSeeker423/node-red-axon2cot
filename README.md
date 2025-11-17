@@ -1,7 +1,8 @@
 <h1 align='center'>node-red-axon2cot</h1>
 
-<p align='center'>A node red flow using an Axon API key to create COT messages to be sent to a TAK server.
-Pulls Axon Body and Axon Fleet details and Locations.</p>
+<p align='center'>A node red flow using an Axon API key to create COT messages to be sent to a TAK server.</p>
+
+<p align='center'>Pulls Axon Body and Axon Fleet details and Locations.</p>
 
 ## Pre-Requisites / Setup
 
