@@ -2,7 +2,7 @@
 
 <p align='center'>A node red flow using an Axon API key to create COT messages to be sent to a TAK server.</p>
 
-<p align='center'>Pulls both Axon Body and Axon Fleet details and Locations.</p>
+<p align='center'>Pulls both Axon Body and Axon Fleet details and locations.</p>
 
 <p align='center'>Portions of this code are derived from https://github.com/dfpc-coe/etl-axon licensed under the MIT License.</p>
 
