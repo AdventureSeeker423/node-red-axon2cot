@@ -27,12 +27,4 @@
 - Client ID
 - Agency Domain (IE <your-agency>.evidence.com)![rtaImage](https://github.com/user-attachments/assets/10316d45-6ec8-484d-8444-6d028bb1f9e9)
 
-
-
-
-
-
-
-# Portions of this code are derived from ProjectName
-# Copyright (c) Original Author(s)
-# Licensed under the MIT License.
+## Deployment
