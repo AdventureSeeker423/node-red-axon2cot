@@ -6,7 +6,8 @@
 
 <p align='center'>Portions of this code are derived from https://github.com/dfpc-coe/etl-axon licensed under the MIT License.</p>
 
-<p align="center"><img src="https://raw.githubusercontent.com/AdventureSeeker423/node-red-axon2cot/blob/main/axon_flow_example.png" alt="NodeRed Flow Example"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/AdventureSeeker423/node-red-axon2cot/main/axon_flow_example.png" alt="Axon Flow Example"></p>
+
 
 ## Pre-Requisites / Setup
 
