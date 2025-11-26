@@ -1,0 +1,231 @@
+[
+    {
+        "id": "a7e331f0738e79aa",
+        "type": "tab",
+        "label": "Axon",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "evidence-inject",
+        "type": "inject",
+        "z": "a7e331f0738e79aa",
+        "name": "Trigger Axon",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "8",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 300,
+        "wires": [
+            [
+                "76907cac15bdc776"
+            ]
+        ]
+    },
+    {
+        "id": "7c9f23f485e7beef",
+        "type": "debug",
+        "z": "a7e331f0738e79aa",
+        "name": "Show Axon JSON",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "5b400fcfe1fd95ce",
+        "type": "json",
+        "z": "a7e331f0738e79aa",
+        "name": "",
+        "property": "payload",
+        "action": "obj",
+        "pretty": true,
+        "x": 510,
+        "y": 300,
+        "wires": [
+            [
+                "7c9f23f485e7beef",
+                "e032edcbb22d1ab3",
+                "86638c56f97d216d"
+            ]
+        ]
+    },
+    {
+        "id": "ee2f8485f750a289",
+        "type": "tcp out",
+        "z": "a7e331f0738e79aa",
+        "name": "AXON BODY",
+        "host": "yourtak.server.com",
+        "port": "8057",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "679594fe68b6a27d",
+        "x": 1130,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "86638c56f97d216d",
+        "type": "function",
+        "z": "a7e331f0738e79aa",
+        "name": "Loop Axon Body and Send",
+        "func": "// Precompute timestamps once\nconst now = Date.now();\nconst dtD = new Date(now).toISOString();\nconst dtD5 = new Date(now + 30000).toISOString();\n\n// Simple/fast sanitize\nconst sanitize = (text) =>\n    (text || 'unknown')\n        .toString()\n        .trim()\n        .replace(/\\s+/g, '_')\n        .replace(/[^\\w\\-]/g, '')\n        .slice(0, 32);\n\n// Constants\nconst agencyIcon = \"ad78aafb-83a6-4c07-b2b9-a897a8b6a38f/Shapes/walkingpersonnel.png\";\nconst Color = \"-16711936\"; // green\n\nconst features = msg.payload.features || [];\n\nfor (const feature of features) {\n    const { geometry, properties = {} } = feature;\n    const meta = properties.metadata || {};\n\n    // Validate geometry + device filters early\n    if (\n        !geometry ||\n        geometry.type !== 'Point' ||\n        !Array.isArray(geometry.coordinates) ||\n        !meta.deviceModel?.startsWith('AXON_BODY') ||\n        meta.status?.toUpperCase() === \"BUFFERING\"\n    ) continue;\n\n    const [lon, lat] = geometry.coordinates;\n    if (!lat || !lon) continue;\n\n    // Build callsign\n    let callsign = properties.callsign;\n    if (!callsign) {\n        const fn = meta.primary_assignee_firstName || '';\n        const ln = meta.primary_assignee_lastName || 'Unknown';\n        callsign = `${fn.charAt(0)}. ${ln}`.trim();\n    }\n    if (callsign.startsWith(\"HCSO \")) {\n        callsign = callsign.slice(5).trim();\n    }\n\n    // Helper for remarks\n    const remarksLines = [];\n    const add = (label, val, fallback = null) => {\n        const v = (val != null && val.toString().trim() !== '') ? val : fallback;\n        if (v != null) remarksLines.push(`${label}: ${v}`);\n    };\n\n    add('Officer', `${meta.primary_assignee_firstName || ''} ${meta.primary_assignee_lastName || ''}`.trim());\n    add('Badge', meta.primary_assignee_badgeNumber);\n    add('Status', meta.status);\n    add('Device Model', meta.deviceModel);\n    add('Device Serial', meta.deviceSerial);\n    add('Battery', meta.battery, 'Unknown');\n    add('Signal', meta.signalStrength, 'Unknown');\n    add('Updated', meta.deviceUpdateTimestamp ? new Date(meta.deviceUpdateTimestamp).toISOString() : 'Unknown');\n\n    const remarks = remarksLines.join('\\n');\n\n    // Build output message\n    node.send({\n        payload: {\n            event: {\n                _attributes: {\n                    version: \"2.0\",\n                    uid: `axon-body-${sanitize(callsign)}`,\n                    type: \"a-f-G-U-U-L\",\n                    how: \"m-g\",\n                    time: dtD,\n                    start: properties.start || dtD,\n                    stale: dtD5\n                },\n                point: {\n                    _attributes: {\n                        lat,\n                        lon,\n                        hae: \"9999999.0\",\n                        ce: \"9999999.0\",\n                        le: \"9999999.0\"\n                    }\n                },\n                detail: {\n                    link: {\n                        _attributes: {\n                            url: `https://maps.google.com/?q=${lat},${lon}`,\n                            remarks: \"Axon Body Location\",\n                            relation: \"r-u\",\n                            mime: \"text/html\",\n                            version: \"1.0\"\n                        }\n                    },\n                    contact: {\n                        _attributes: { callsign }\n                    },\n                    usericon: {\n                        _attributes: { iconsetpath: agencyIcon }\n                    },\n                    color: {\n                        _attributes: { argb: Color }\n                    },\n                    remarks\n                }\n            }\n        }\n    });\n}\n\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 280,
+        "wires": [
+            [
+                "15b7592cc767f15d"
+            ]
+        ]
+    },
+    {
+        "id": "214978a361bc7599",
+        "type": "tcp out",
+        "z": "a7e331f0738e79aa",
+        "name": "AXON FLEET",
+        "host": "yourtak.server.com",
+        "port": "8058",
+        "beserver": "client",
+        "base64": false,
+        "end": false,
+        "tls": "50afa445acc08657",
+        "x": 1140,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "e032edcbb22d1ab3",
+        "type": "function",
+        "z": "a7e331f0738e79aa",
+        "name": "Loop Axon Fleet and Send",
+        "func": "// Precompute timestamps\nconst now = Date.now();\nconst dtD = new Date(now).toISOString();\nconst dtD5 = new Date(now + 30000).toISOString();\n\n// Fast sanitize\nconst sanitize = (text) =>\n    (text || 'unknown')\n        .toString()\n        .trim()\n        .replace(/\\s+/g, '_')\n        .replace(/[^\\w\\-]/g, '')\n        .slice(0, 32);\n\n// Constants\nconst agencyIcon = \"ad78aafb-83a6-4c07-b2b9-a897a8b6a38f/Shapes/cabs.png\";\nconst Color = \"-16776961\"; // blue\n\nconst features = msg.payload.features || [];\n\nfor (const feature of features) {\n    const { geometry, properties = {} } = feature;\n    const meta = properties.metadata || {};\n\n    // Validate geometry + fleet filter\n    if (\n        !geometry ||\n        geometry.type !== 'Point' ||\n        !Array.isArray(geometry.coordinates) ||\n        !meta.deviceModel?.startsWith('AXON_FLEET')\n    ) continue;\n\n    const [lon, lat] = geometry.coordinates;\n    if (!lat || !lon) continue;\n\n    // Determine callsign\n    const callsign = properties.callsign || meta.vehicle_vehicleName || 'Unknown';\n\n    // Remarks builder\n    const remarksLines = [];\n    const add = (label, val, fallback = null) => {\n        const v = (val != null && val.toString().trim() !== '') ? val : fallback;\n        if (v != null) remarksLines.push(`${label}: ${v}`);\n    };\n\n    add('Device Model', meta.deviceModel);\n    add('Device Serial', meta.deviceSerial);\n    add('Status', meta.status);\n    add('Battery', meta.battery, 'Unknown');\n    add('Signal', meta.signalStrength, 'Unknown');\n    add('Updated', meta.deviceUpdateTimestamp ? new Date(meta.deviceUpdateTimestamp).toISOString() : 'Unknown');\n    add('Vehicle', meta.vehicle_vehicleName);\n\n    const remarks = remarksLines.join('\\n');\n\n    // Emit message\n    node.send({\n        payload: {\n            event: {\n                _attributes: {\n                    version: \"2.0\",\n                    uid: `axon-fleet-${sanitize(callsign)}`,\n                    type: \"a-f-G-E-V\",\n                    how: \"m-g\",\n                    time: dtD,\n                    start: properties.start || dtD,\n                    stale: dtD5\n                },\n                point: {\n                    _attributes: {\n                        lat,\n                        lon,\n                        hae: \"9999999.0\",\n                        ce: \"9999999.0\",\n                        le: \"9999999.0\"\n                    }\n                },\n                detail: {\n                    link: {\n                        _attributes: {\n                            url: `https://maps.google.com/?q=${lat},${lon}`,\n                            remarks: \"Axon Fleet Location\",\n                            relation: \"r-u\",\n                            mime: \"text/html\",\n                            version: \"1.0\"\n                        }\n                    },\n                    contact: { _attributes: { callsign } },\n                    usericon: { _attributes: { iconsetpath: agencyIcon } },\n                    color: { _attributes: { argb: Color } },\n                    remarks\n                }\n            }\n        }\n    });\n}\n\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 360,
+        "wires": [
+            [
+                "47717b850a5d17dc"
+            ]
+        ]
+    },
+    {
+        "id": "76907cac15bdc776",
+        "type": "function",
+        "z": "a7e331f0738e79aa",
+        "name": "Fetch Axon Devices",
+        "func": "// CONFIGURATION\nconst config = {\n    AgencyName: \"xxx\", //YOUR AGENCY NAME HERE\n    PartnerID: \"xxx\", //YOUR PARTNER ID HERE\n    ClientID: \"xxx\", //YOUR CLIENT ID HERE\n    ClientSecret: \"xxx\", //YOUR CLIENT SECRET HERE\n    DataTimeout: 5,\n    AgencyAcronym: \"xxx\" //YOUR AGENCY ACRONYM HERE\n};\n\nasync function fetchJSON(url, options = {}) {\n    const res = await fetch(url, options);\n    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);\n    return res.json();\n}\n\nasync function main() {\n    const tokenURL = `https://${config.AgencyName}.evidence.com/api/oauth2/token`;\n\n    // OAuth token request\n    const tokenData = await fetchJSON(tokenURL, {\n        method: \"POST\",\n        headers: { \"content-type\": \"application/x-www-form-urlencoded\" },\n        body: `grant_type=client_credentials&partner_id=${encodeURIComponent(config.PartnerID)}&client_id=${encodeURIComponent(config.ClientID)}&client_secret=${encodeURIComponent(config.ClientSecret)}`\n    });\n\n    const accessToken = tokenData?.access_token;\n    if (!accessToken) throw new Error(\"No access token received\");\n\n    // Device request\n    const deviceURL = `https://${config.AgencyName}.evidence.com/respond/api/v1/devices/states/search`;\n    const data = await fetchJSON(deviceURL, {\n        method: \"POST\",\n        headers: {\n            Accept: \"application/json\",\n            \"Content-Type\": \"application/json\",\n            \"Client-Type\": \"EXTERNAL\",\n            Authorization: `Bearer ${accessToken}`\n        },\n        body: JSON.stringify({ from: 0, size: 2000 })\n    });\n\n    if (!data?.data) return { type: \"FeatureCollection\", features: [] };\n\n    const features = [];\n    const nowIso = new Date().toISOString();\n    const cutoff = Date.now() - config.DataTimeout * 60 * 1000;\n\n    for (const device of data.data) {\n        const attr = device.attributes;\n        const loc = attr?.location;\n        if (!loc || attr.status === \"DOCKED\") continue;\n\n        const updateTime = new Date(loc.locationUpdateTimestamp).getTime();\n        if (updateTime < cutoff) continue;\n\n        const primary = attr.assignees?.find(a => a.primary);\n\n        const feature = {\n            id: device.axonDeviceId,\n            type: \"Feature\",\n            geometry: {\n                type: \"Point\",\n                coordinates: [loc.longitude, loc.latitude]\n            },\n            properties: {\n                type: primary ? \"a-f-G-U-U-L\" : \"a-f-G-E-V\",\n                how: \"m-g\",\n                callsign: primary\n                    ? `${config.AgencyAcronym} ${primary.firstName[0]}. ${primary.lastName}`\n                    : attr.vehicle?.vehicleName,\n                time: nowIso,\n                start: new Date(loc.locationUpdateTimestamp).toISOString(),\n                remarks: primary\n                    ? `Type: Officer\\nAgency: ${device.partnerName}\\nName: ${primary.firstName} ${primary.lastName}`\n                    : `Type: Vehicle\\nAgency: ${device.partnerName}\\nName: ${attr.vehicle?.vehicleName}`,\n                metadata: {\n                    partnerName: device.partnerName,\n                    axonDeviceId: device.axonDeviceId,\n                    deviceModel: device.deviceModel,\n                    deviceUpdateTimestamp: device.deviceUpdateTimestamp,\n                    deviceSerial: attr.deviceSerial,\n                    location_accuracy: loc.accuracy,\n                    location_latitude: loc.latitude,\n                    location_longitude: loc.longitude,\n                    location_locationUpdateTimestamp: loc.locationUpdateTimestamp,\n                    status: attr.status,\n                    stream_isStreamable: attr.stream?.isStreamable ?? false,\n                    signalStrength: attr.signalStrengths?.[0]?.signalStrength,\n                    battery: attr.batteries?.[0]?.batteryPercentage,\n                    primary_assignee_firstName: primary?.firstName,\n                    primary_assignee_lastName: primary?.lastName,\n                    primary_assignee_badgeNumber: primary?.badgeNumber,\n                    primary_assignee_userId: primary?.userId,\n                    vehicle_vehicleId: attr.vehicle?.vehicleId,\n                    vehicle_assigneeType: attr.vehicle?.assigneeType,\n                    vehicle_vehicleName: attr.vehicle?.vehicleName\n                }\n            }\n        };\n\n        features.push(feature);\n    }\n\n    return { type: \"FeatureCollection\", features };\n}\n\nreturn main()\n    .then(res => ({ payload: res }))\n    .catch(err => ({ payload: { error: err.message } }));\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "fetch",
+                "module": "node-fetch"
+            }
+        ],
+        "x": 320,
+        "y": 300,
+        "wires": [
+            [
+                "5b400fcfe1fd95ce"
+            ]
+        ]
+    },
+    {
+        "id": "15b7592cc767f15d",
+        "type": "tak",
+        "z": "a7e331f0738e79aa",
+        "name": "TAK",
+        "x": 950,
+        "y": 280,
+        "wires": [
+            [
+                "ee2f8485f750a289"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "47717b850a5d17dc",
+        "type": "tak",
+        "z": "a7e331f0738e79aa",
+        "name": "TAK",
+        "x": 950,
+        "y": 360,
+        "wires": [
+            [
+                "214978a361bc7599"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "679594fe68b6a27d",
+        "type": "tls-config",
+        "name": "AXON BODY",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": false,
+        "alpnprotocol": ""
+    },
+    {
+        "id": "50afa445acc08657",
+        "type": "tls-config",
+        "name": "AXON FLEET",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": false,
+        "alpnprotocol": ""
+    },
+    {
+        "id": "82d98458eef0bfd1",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-tak": "4.2.0"
+        }
+    }
+]
