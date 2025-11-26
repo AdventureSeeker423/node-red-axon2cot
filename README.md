@@ -6,6 +6,8 @@
 
 <p align='center'>Portions of this code are derived from https://github.com/dfpc-coe/etl-axon licensed under the MIT License.</p>
 
+<p align="center"><img src="https://raw.githubusercontent.com/AdventureSeeker423/node-red-axon2cot/blob/main/axon_flow_example.png" alt="NodeRed Flow Example"></p>
+
 ## Pre-Requisites / Setup
 
 1. Contact the administrator of the Axon Evidence Account to create an API Token.
