@@ -30,3 +30,6 @@
 ## Deployment
 
 1. Install [node-red-contrib-tak](https://flows.nodered.org/node/node-red-contrib-tak) if not already installed.
+2. Import the node red flow.
+3. Open the "Fetch Axon Devices" function and fill in your Agency Name, Partner ID, Client ID, Client Secret, and Agency Acronym.
+4. Edit your server connections by editing the "Axon Body" and "Axon Fleet" nodes.  You will need to replace your host, port, and import your certificate/key files for the TLS connection.
