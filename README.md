@@ -28,3 +28,5 @@
 - Agency Domain (<your-agency>.evidence.com)![rtaImage](https://github.com/user-attachments/assets/10316d45-6ec8-484d-8444-6d028bb1f9e9)
 
 ## Deployment
+
+1. Install [node-red-contrib-tak](https://flows.nodered.org/node/node-red-contrib-tak) if not already installed.
